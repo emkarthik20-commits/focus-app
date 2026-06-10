@@ -1,0 +1,83 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './routes/auth';
+import { ThemeProvider } from './hooks/theme';
+import { ToastProvider } from './components/Toast';
+
+// Layouts
+import MainLayout from './layouts/MainLayout';
+import AuthLayout from './layouts/AuthLayout';
+
+// Pages
+import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import LogScreenTime from './pages/LogScreenTime';
+import LogOfflineActivity from './pages/LogOfflineActivity';
+import MoodTracker from './pages/MoodTracker';
+import Reminders from './pages/Reminders';
+import Analytics from './pages/Analytics';
+import SettingsPage from './pages/Settings';
+
+// Loader
+import { Loader2 } from 'lucide-react';
+
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-theme-sec text-theme-text-sec flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-theme-primary animate-spin" />
+        <p className="text-sm text-theme-text-sec font-medium">Securing session...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Auth Routing */}
+              <Route element={<AuthLayout />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+              </Route>
+
+              {/* Application Routing */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="log-screen" element={<LogScreenTime />} />
+                <Route path="log-offline" element={<LogOfflineActivity />} />
+                <Route path="mood" element={<MoodTracker />} />
+                <Route path="reminders" element={<Reminders />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="settings" element={<SettingsPage />} />
+              </Route>
+
+              {/* Catch-all Redirect */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
+  );
+}
